@@ -43,7 +43,7 @@ export default function Ostoslista() {
           ...info[key],
         }));
         console.log('Fetched items:', items);
-        setData([{ id: 'test', osoite: 'Jäkäläkuja 7' }, ...items]);
+        setData([{ id: 'test', osoite: 'Asemakuja 2' }, ...items]);
       } else {
         setData([]);
       }
