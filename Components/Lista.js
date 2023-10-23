@@ -42,10 +42,9 @@ export default function Ostoslista() {
           id: key,
           ...info[key],
         }));
-        console.log('Fetched items:', items);
         setData([{ id: 'test', osoite: 'Asemakuja 2' }, ...items]);
       } else {
-        setData([]);
+        setData([{ id: 'test', osoite: 'Asemakuja 2' }]);
       }
     },
     (error) => {
@@ -55,14 +54,14 @@ export default function Ostoslista() {
   
     const deleteItem = (id) => {
       remove(ref(database, `data/${id}`));
+      setData((prevData) => prevData.filter((item) => item.id !== id));
     };
     const renderItem = ({ item }) => {
-      console.log('Fetched item:', item);
       return (
-        <ListItem bottomDivider containerStyle={{ backgroundColor: 'white'}}>
-          <ListItem.Content onLongPress={() => deleteItem(item.id)} onPress={() => navigation.navigate('Lista', osoite)}>
+        <ListItem bottomDivider containerStyle={{ backgroundColor: 'white'}}
+        onLongPress={() => deleteItem(item.id)}
+         onPress={() => navigation.navigate('Kartta', item.osoite)}>
             <ListItem.Title>{item.osoite}</ListItem.Title>
-          </ListItem.Content>
         </ListItem>
       );
     };

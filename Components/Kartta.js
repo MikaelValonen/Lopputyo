@@ -9,10 +9,16 @@ const myKey = 'JMU5h8bsP4SthjzoIN7jyKXiMewMoyje'
 
 export default function App(osoite) {
   const [location, setLocation] = useState(null);
-  const [etsittava, setEtsittava] = useState(osoite);
+  const [etsittava, setEtsittava] = useState(osoite.route.params);
   const [tulos, setTulos] = useState('');
-  const [lati, setLati] = useState(location?.coords.latitude || 0);
-  const [long, setLong] = useState(location?.coords.longitude || 0);
+  const [lati, setLati] = useState(0);
+  const [long, setLong] = useState(0);
+  const [mapRegion, setMapRegion] = useState({
+    latitude: 0,
+    longitude: 0,
+    latitudeDelta: 0.0922,
+    longitudeDelta: 0.0421,
+  });
   const navigation = useNavigation();
   useEffect(() => {
     (async () => {
@@ -26,37 +32,47 @@ export default function App(osoite) {
       setLocation(location);
       setLati(location.coords.latitude);
       setLong(location.coords.longitude);
-      console.log('Location:', location);
+      setMapRegion({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      });
       } catch (error) {
         console.error('Error getting location:', error);
       }
     })();
   }, []);
 
-
+  
   const buttonPressed = async () => {
     try {
+      console.log('etsittava: ', etsittava)
+      console.log('Osoite:',osoite)
       const response = await fetch(`https://www.mapquestapi.com/geocoding/v1/address?key=${myKey}&location=${etsittava}`);
       const result = await response.text();
       setTulos(result);
       const parsedResult = JSON.parse(result);
       const newLatitude = parseFloat(parsedResult.results[0].locations[0].displayLatLng.lat);
       const newLongitude = parseFloat(parsedResult.results[0].locations[0].displayLatLng.lng);
+
+      console.log('newLatitude:', newLatitude);
+      console.log('newLongitude:', newLongitude);
+
       setLati(newLatitude);
       setLong(newLongitude);
+      setMapRegion({
+        latitude: newLatitude,
+        longitude: newLongitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      });
     } catch (error) {
       Alert.alert('Error', error.message);
     }
   };
   
 
-const initial = {
-  latitude: lati,
-  longitude: long,
- // latitudeDelta: 0.0922,
- // longitudeDelta: 0.0421,
-
-};
 
 const coordinates = {
   latitude: parseFloat(lati),
@@ -65,8 +81,7 @@ const coordinates = {
 
   return (
     <View style={styles.container}>
-      <Header leftComponent={icon={ name: 'menu', color: '#fff', onPress: () => navigation.navigate('Lista')}} centerComponent={{ text: 'MAP', color: '#fff' }}/>
-      <MapView style={styles.map} region={initial}>
+      <MapView style={styles.map} region={mapRegion}>
       <Marker coordinate={coordinates}  title= {etsittava} />
       </MapView>
       <Button title="Show" onPress={() => buttonPressed()} />
