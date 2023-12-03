@@ -1,32 +1,47 @@
 import { NavigationContainer } from '@react-navigation/native';
 import {  createNativeStackNavigator } from '@react-navigation/native-stack';
-import Kartta from './Components/Kartta'
-import Lista from './Components/Lista'
-import {Icon} from 'react-native-elements';
-const Stack = createNativeStackNavigator();
+import Icon from 'react-native-vector-icons/Feather';
+import { FirebaseProvider } from './Components/FirebaseContext';
+import React from 'react';
+import YksiTyo from './Components/YksiTyo'
+import UusiTyo from './Components/UusiTyo'
+import Kalenteri from './Components/Kalenteri'
+import TyoLista from './Components/TyoLista'
 
+const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-<NavigationContainer>
+  <FirebaseProvider>
+  <NavigationContainer>
   <Stack.Navigator>
-  <Stack.Screen name="My Places" component={Lista}  />
-  <Stack.Screen name="Kartta"  component={Kartta}
-          options={({ navigation }) => ({
-            title: 'Map',
-            headerLeft: () => (
-              <Icon
-                name="list"
-                size={24}
-                style={{ marginRight: 15 }}
-                onPress={() => navigation.navigate('My Places')}
-              />
-            ),
-          })}
-        />
-    
+  <Stack.Screen name="Työlista" component={TyoLista}  options={({ navigation }) => ({
+              title: 'Kalenteri',
+              headerRight: () => (
+                <Icon
+                  name="calendar"
+                  size={24}
+                  style={{ marginRight: 15 }}
+                  onPress={() => navigation.navigate('Kalenteri')}
+                />
+              ),
+            })} />
+  <Stack.Screen name="MuokkaaTyötä"  component={YksiTyo} />
+  <Stack.Screen name="Kalenteri" component={Kalenteri} options={({ navigation }) => ({
+              title: 'Uusi Työ',
+              headerRight: () => (
+                <Icon
+                  name="plus"
+                  size={24}
+                  style={{ marginRight: 15 }}
+                  onPress={() => navigation.navigate('UusiTyö')}
+                />
+              ),
+            })}
+          />
+  <Stack.Screen name="UusiTyö"  component={UusiTyo}/>  
   </Stack.Navigator>
-  
-</NavigationContainer>
+  </NavigationContainer>
+  </FirebaseProvider>
   );
 };
