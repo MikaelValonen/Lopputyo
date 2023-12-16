@@ -18,7 +18,8 @@ export default function TyoLista() {
   const firebaseContext = useFirebase(); // Firebase null testausta varten
   const initialDatabaseState = firebaseContext && firebaseContext.database ? firebaseContext.database : null;
   const [database, setDatabase] = useState(initialDatabaseState); // firebase database käyttöä varten
-
+  const [loading, setLoading] = useState(true);
+  
   useEffect(() => {
     // Check if the database is null and set up a default state
     if (!database) {
@@ -35,14 +36,21 @@ export default function TyoLista() {
         }));
         setData([...items]);
         setFilteredData([...items]); // Initialize filteredData
+        console.log('All items:', items);
       } else {
         console.log('No data in list.');
       }
+      setLoading(false);
     },
     (error) => {
       console.error('Error fetching data:', error);
+      setLoading(false);
     });
   }, [database]);
+
+  if (loading) {
+    return <Text>Loading...</Text>; // Display a loading indicator
+  }
 
   const filterData = () => {
     let filtered = [...data]; // Copy of original list
@@ -54,11 +62,11 @@ export default function TyoLista() {
         filtered = filtered.filter(item => item.name.toLowerCase().includes(name.toLowerCase()));
         break;
       case 'selectedOption':
-        // Add your filter2 logic here
+        // Add  filter2 logic here
         filtered = filtered.filter(/* filter2 logic */);
         break;
         case 'selectedDate':
-          // Add your filter2 logic here
+          // Add  filter3 logic here
           filtered = filtered.filter(/* filter2 logic */);
           break;
       default:

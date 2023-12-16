@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, TextInput, Button } from 'react-native';
+import Icon from 'react-native-vector-icons/Feather';
+import { StyleSheet, View, TextInput, Button, Text, TouchableOpacity } from 'react-native';
 import { push, ref } from 'firebase/database';
 import { useNavigation } from '@react-navigation/native';
 import { useFirebase } from './FirebaseContext';
@@ -7,6 +8,7 @@ import { Picker } from '@react-native-picker/picker';
 import DatePicker from '@react-native-community/datetimepicker';
 
 export default function UusiTyo() {
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [Nimi, setNimi] = useState('');
   const [Desc, setDesc] = useState('');
   const [selectedOption, setSelectedOption] = useState('Done');
@@ -35,7 +37,25 @@ export default function UusiTyo() {
     setSelectedDate(new Date('2023-01-01'));
     navigation.goBack();
   };
+  
+  const handleDatePress = () => {
+    if (setShowDatePicker(true)){
+    setShowDatePicker(false);
+  } else {
+    setShowDatePicker(true)
+  }
+  };
 
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+    setShowDatePicker(false);
+  };
+  useEffect(() => {
+    return () => {
+      // Reset showDatePicker when component unmounts
+      setShowDatePicker(false);
+    };
+  }, []);
   return (
       <View style={styles.container}>
       <TextInput type="text" name="Nimi" placeholder="Name" onChangeText={setNimi}  value={Nimi} />
@@ -49,13 +69,24 @@ export default function UusiTyo() {
       </Picker>
 
 
-      <DatePicker // valitaan päivämäärä, johon työ liittyy
-        style={{ width: 200 }}
-        date={selectedDate}
-        mode="date"
-        placeholder="Select date"
-        format="YYYY-MM-DD"
-        onDateChange={(date) => setSelectedDate(date)}/>
+      <TouchableOpacity onPress={handleDatePress}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
+          <Text style={{ fontSize: 16 }}>Selected Date: {selectedDate.toISOString().split('T')[0]}</Text>
+          <Icon name="calendar"  size={30}  style={{ margin: 15 }}/>
+        </View>
+      </TouchableOpacity>
+
+      {showDatePicker && (
+        <DatePicker
+          value={selectedDate}
+          style={{ width: 300 }}
+          date={selectedDate}
+          mode="date"
+          placeholder="Select date"
+          format="YYYY-MM-DD"
+          onDateChange={handleDateChange}
+        />
+      )}
 
       <Button title="Add Item" onPress={addNewItem} />
     </View>

@@ -6,7 +6,7 @@ import { Agenda } from 'react-native-calendars';
 import { useNavigation } from '@react-navigation/native';
 
 const Kalenteri = () => {
-  const { firebaseData } = React.useContext(useFirebase);
+  const { firebaseData } = useFirebase() || { database: null };
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState([]);
   const navigation = useNavigation();
@@ -44,7 +44,7 @@ const Kalenteri = () => {
   };
 
   const checkIfEventExists = date => {
-    return firebaseData.some(event => {
+    return firebaseData?.some(event => {
       const eventDate = event.selectedDate;
       return isSameMonth(new Date(eventDate), date);
     });
