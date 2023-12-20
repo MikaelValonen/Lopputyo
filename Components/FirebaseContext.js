@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getDatabase } from 'firebase/database';
+import {  Text } from 'react-native';
+
 
 const FirebaseContext = createContext();
 
@@ -32,7 +34,9 @@ export function FirebaseProvider({ children }) {
       console.error('Firebase initialization error:', error);
     }
   }, []);
-
+  if (!firebaseInstance) {
+    return <Text>Loading...</Text>;; //wait until firebaseInstance is done, cover with loading image
+  }
   return (
     <FirebaseContext.Provider value={firebaseInstance}>
       {children}

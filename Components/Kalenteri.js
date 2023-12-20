@@ -18,18 +18,27 @@ const Kalenteri = () => {
   const generateCalendar = () => {
     const startOfMonthDate = startOfMonth(currentMonth);
     const endOfMonthDate = endOfMonth(currentMonth);
-
+  
     // array of current month
     const daysInMonth = eachDayOfInterval({ start: startOfMonthDate, end: endOfMonthDate });
-
+  
     // Map through the days and mark the ones present in Firebase
-    const calendarData = daysInMonth.map(day => ({
-      date: day,
-      isEvent: checkIfEventExists(day),
-    }));
-
+    const calendarData = daysInMonth.reduce((acc, day) => {
+      const dateKey = format(day, 'yyyy-MM-dd');
+      const isEvent = checkIfEventExists(day);
+      
+      if (!acc[dateKey]) {
+        acc[dateKey] = [];
+      }
+  
+      acc[dateKey].push({ date: day, isEvent });
+  
+      return acc;
+    }, {});
+  
     setCalendarDays(calendarData);
   };
+  
 
   const handleDayPress = day => {
     const selectedDate = format(day.date, 'yyyy-MM-dd');
@@ -47,7 +56,7 @@ const Kalenteri = () => {
     return firebaseData?.some(event => {
       const eventDate = event.selectedDate;
       return isSameMonth(new Date(eventDate), date);
-    });
+    }) || false;
   };
 
   return (

@@ -16,7 +16,7 @@ export default function App() {
   <NavigationContainer>
   <Stack.Navigator>
   <Stack.Screen name="Työlista" component={TyoLista}  options={({ navigation }) => ({
-              title: 'Kalenteri',
+              title: 'Työlista',
               headerRight: () => (
                 <Icon
                   name="calendar"

@@ -7,7 +7,7 @@ import { useFirebase } from './FirebaseContext';
 import { Picker } from '@react-native-picker/picker';
 import DatePicker from '@react-native-community/datetimepicker';
 
-export default function UusiTyo() {
+export default function UusiTyo({ route }) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [Nimi, setNimi] = useState('');
   const [Desc, setDesc] = useState('');
@@ -15,6 +15,7 @@ export default function UusiTyo() {
   const [selectedDate, setSelectedDate] = useState(new Date('2023-01-01'));
   const { database } = useFirebase() || { database: null };
   const navigation = useNavigation();
+  const { addNew } = route.params;
 
   useEffect(() => { // check if null, to avoid bugs
     if (!database) {
@@ -27,11 +28,13 @@ export default function UusiTyo() {
       name: Nimi,
       description: Desc,
       option: selectedOption,
-      date: selectedDate,
+      date: selectedDate.toISOString().split('T')[0],
     };
 
     const itemsRef = ref(database, 'data');
     push(itemsRef, newItem);
+    addNew(newItem);
+
     setDesc('');
     setSelectedOption('Done');
     setSelectedDate(new Date('2023-01-01'));
@@ -39,15 +42,14 @@ export default function UusiTyo() {
   };
   
   const handleDatePress = () => {
-    if (setShowDatePicker(true)){
-    setShowDatePicker(false);
-  } else {
-    setShowDatePicker(true)
-  }
+    setShowDatePicker(!showDatePicker);
   };
+  
 
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
+  const handleDateChange = (event, date) => {
+    if (date !== undefined) {
+      setSelectedDate(new Date(date));
+    }
     setShowDatePicker(false);
   };
   useEffect(() => {
@@ -84,7 +86,7 @@ export default function UusiTyo() {
           mode="date"
           placeholder="Select date"
           format="YYYY-MM-DD"
-          onDateChange={handleDateChange}
+          onChange={(event, date) => handleDateChange(event, date)}
         />
       )}
 

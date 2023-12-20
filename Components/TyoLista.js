@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, FlatList, Alert, Text } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { ref, onValue, remove } from 'firebase/database';
+import { ref, onValue, remove, get } from 'firebase/database';
 import { Button, ListItem, Icon } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';
 import { useFirebase } from './FirebaseContext';
-import Svg, { Path } from 'react-native-svg';
+
 
 export default function TyoLista() {
   const [name, setName] = useState('');
@@ -19,17 +19,81 @@ export default function TyoLista() {
   const initialDatabaseState = firebaseContext && firebaseContext.database ? firebaseContext.database : null;
   const [database, setDatabase] = useState(initialDatabaseState); // firebase database käyttöä varten
   const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    // Check if the database is null and set up a default state
-    if (!database) {
-      console.log('Firebase context or database is null.', firebaseContext);
-      return;
+
+  const filterData = () => {
+    console.log('Filtering data...');
+    let filtered = [...data]; // Copy of original list
+    console.log('Filter:', filtered);
+    switch (selectedFilter) {
+      case 'all': // no logic at all
+        break;
+      case 'name': //filter based on name
+        filtered = filtered.sort((a, b) => a.name.localeCompare(b.name));
+        break;       
+      case 'selectedOption': //order based on selected Option, 'Done' come last, other sort normally
+      filtered = filtered.sort((a, b) => {
+        if (a.option === 'Done' && b.option !== 'Done') {
+          return 1; // 'Done' items come last
+        } else if (a.option !== 'Done' && b.option === 'Done') {
+          return -1; 
+        } else {
+          // For non-'Done' items, sort by name
+          return a.name.localeCompare(b.name);
+        }
+      });
+      break;
+      case 'selectedDate': //Order by date
+  filtered = filtered.sort((a, b) => {
+    const dateA = a.date ? new Date(a.date) : null;
+    const dateB = b.date ? new Date(b.date) : null;
+
+    // Handle undefined or null dates
+    if (!dateA && !dateB) {
+      return 0; // If both dates are undefined or null, consider them equal
+    } else if (!dateA) {
+      return -1; // If dateA is undefined or null, consider it smaller
+    } else if (!dateB) {
+      return 1; // If dateB is undefined or null, consider it smaller
     }
-    const itemsRef = ref(database, 'data/');
-    onValue(itemsRef, (snapshot) => {
+
+    // Compare dates
+    if (dateA < dateB) {
+      return -1;
+    } else if (dateA > dateB) {
+      return 1;
+    } else {
+      return 0;
+    }
+  });
+  break;
+      default:
+        console.log('invalid case selected for filtering')
+        break;
+    }
+    setFilteredData(filtered);
+  };
+
+  const fetchData = async () => {
+    try {
+      if (!database) {
+        console.log('Firebase context or database is null.', firebaseContext);
+        return;
+      }
+  
+      const itemsRef = ref(database, 'data/');
+      const snapshot = await get(itemsRef);
+  
+      if (!snapshot.exists()) {
+        console.log('No data in list.');
+        setData([]);
+        setFilteredData([]);
+        setLoading(false);
+        return;
+      }
+  
       const info = snapshot.val();
-      if (info) {
+  
+      if (info !== null) {
         const items = Object.keys(info).map((key) => ({
           id: key,
           ...info[key],
@@ -40,42 +104,34 @@ export default function TyoLista() {
       } else {
         console.log('No data in list.');
       }
+  
       setLoading(false);
-    },
-    (error) => {
-      console.error('Error fetching data:', error);
+    } catch (error) {
+      console.error('Error fetching data:', error.message || error);
       setLoading(false);
-    });
+    }
+  };
+
+  const addNew = (newItem) => {
+    // Update the data state
+    setData((prevData) => [...prevData, newItem]);
+    // Update the filteredData state
+    setFilteredData((prevFilteredData) => [...prevFilteredData, newItem]);
+  };
+  
+  useEffect(() => {
+    fetchData();
   }, [database]);
+
+  useEffect(() => {
+    filterData();
+  }, [selectedFilter, data]);
 
   if (loading) {
     return <Text>Loading...</Text>; // Display a loading indicator
   }
-
-  const filterData = () => {
-    let filtered = [...data]; // Copy of original list
-    switch (selectedFilter) {
-      case 'all':
-        // No specific filter logic for 'all', so everything is visible normally
-        break;
-      case 'name':
-        filtered = filtered.filter(item => item.name.toLowerCase().includes(name.toLowerCase()));
-        break;
-      case 'selectedOption':
-        // Add  filter2 logic here
-        filtered = filtered.filter(/* filter2 logic */);
-        break;
-        case 'selectedDate':
-          // Add  filter3 logic here
-          filtered = filtered.filter(/* filter2 logic */);
-          break;
-      default:
-        console.log('invalid case selected for filtering')
-        break;
-    }
-    filtered = filtered.sort((a, b) => a.name.localeCompare(b.name)); // Sort in ascending order
-    setFilteredData(filtered);
-  };
+  
+  
   
   const filterOptions = [ // filtteri valinnat
     { label: 'All', value: 'all' },
@@ -110,22 +166,15 @@ export default function TyoLista() {
         containerStyle={{ backgroundColor: 'white' }}
         onLongPress={() => deleteItem(item.id)}
         onPress={() => navigation.navigate('MuokkaaTyötä', { Id: item.id })}>
-        <ListItem.Title>{item.name}</ListItem.Title>
+        
+        <ListItem.Title>{`${item.name} - ${item.option} - ${item.date}`}</ListItem.Title>
+        
       </ListItem>
     );
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-         {/* Use the Svg and Path components from react-native-svg */}
-         <Svg height="24" width="24" viewBox="0 0 24 24">
-          <Path
-            fill="#000000"
-            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2V7h2v9z"
-          />
-        </Svg>
-      </View>
       {/* Filter Picker */}
       <Picker style={{ height: 50, width: 200, backgroundColor: 'white' }}
         selectedValue={selectedFilter}
@@ -140,7 +189,7 @@ export default function TyoLista() {
           raised
           buttonStyle={{ backgroundColor: 'lightblue' }}
           title="Add New"
-          onPress={() => navigation.navigate('UusiTyö')}
+          onPress={() => navigation.navigate('UusiTyö', { addNew: addNew })}
         />
       </View>
       <View style={styles.container}>
